@@ -23,7 +23,7 @@ def draw():
 
 
 def main():
-    for i in range(1000):
+    for _ in range(1000): # _ weil wir die variable nicht verwenden
         draw()
 
     print(objectCount)
