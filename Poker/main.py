@@ -13,84 +13,103 @@ counter = {
     "royal_flush": 0
 }
 
-
-def evaluation(middel, my_cards):
-    cards = my_cards and middel
-    # print("Evaluating cards:", cards)
-    check_pairs(cards)
-    flush(cards, True)
-    straight(cards)
+colour = ("Herz", "Karo", "Pik", "Kreuz")
+value = ("2", "3", "4", "5", "6", "7", "8", "9", "10", "Bube", "Dame", "König", "Ass")
 
 
-def check_pairs(cards):
+def evaluation(cards):
+    if is_royal_flush(cards):
+        counter["royal_flush"] += 1
+    elif is_straight_flush(cards):
+        counter["straight_flush"] += 1
+    elif is_four_of_a_kind(cards):
+        counter["four_of_a_kind"] += 1
+    elif is_full_house(cards):
+        counter["full_house"] += 1
+    elif is_flush(cards):
+        counter["flush"] += 1
+    elif is_straight(cards):
+        counter["straight"] += 1
+    elif is_three_of_a_kind(cards):
+        counter["three_of_a_kind"] += 1
+    elif is_two_pairs(cards):
+        counter["two_pair"] += 1
+    elif is_pair(cards):
+        counter["pair"] += 1
+
+
+def is_pair(cards):
     values = [card.split(",")[1] for card in cards.values()]
     counts = Counter(values)
-    pairs = [value for value, count in counts.items() if count >= 2]
-    three_of_a_kind = [value for value, count in counts.items() if count >= 3]
-    four_of_a_kind = [value for value, count in counts.items() if count >= 4]
-    if pairs:
-        if four_of_a_kind:
-            counter["full_house"] += 1
-            # print(f"Fullhouse: {three_of_a_kind} {pairs}")
-        elif len(pairs) == 2 and three_of_a_kind:
-            counter["four_of_a_kind"] += 1
-            # print(f"Four Of a kind: {four_of_a_kind}")
-        elif three_of_a_kind:
-            counter["three_of_a_kind"] += 1
-            # print(f"Three Of a kind: {three_of_a_kind}")
-        elif len(pairs) == 2:
-            counter["two_pair"] += 1
-            # print(f"Two Pairs: {pairs}")
-        else:
-            counter["pair"] += 1
-            # print(f"Es gibt ein Paar {pairs}")
-
-
-def flush(cards, is_flush):
-    values = [card.split(",")[0] for card in cards.values()]
-    # print("Flushing cards:", values)
-    counts = Counter(values)
-    flush_value = [value for value, count in counts.items() if count >= 5]
-    if flush_value and is_flush:
-        counter["flush"] += 1
+    pair = [val for val, count in counts.items() if count == 2]
+    if len(pair) == 1:
         return True
-        # print("Flush cards:", flush_value)
 
 
-def straight(cards):
-    zahlen = ("2", "3", "4", "5", "6", "7", "8", "9", "10", "Bube", "Dame", "König", "Ass")
+def is_two_pairs(cards):
+    values = [card.split(",")[1] for card in cards.values()]
+    counts = Counter(values)
+    pairs = [val for val, count in counts.items() if count == 2]
+    if len(pairs) == 2:
+        return True
+
+
+def is_three_of_a_kind(cards):
+    values = [card.split(",")[1] for card in cards.values()]
+    counts = Counter(values)
+    three_of_kind = [val for val, count in counts.items() if count == 3]
+    if three_of_kind:
+        return True
+
+
+def is_four_of_a_kind(cards):
+    values = [card.split(",")[1] for card in cards.values()]
+    counts = Counter(values)
+    four_of_kind = [val for val, count in counts.items() if count == 4]
+    if four_of_kind:
+        return True
+
+
+def is_full_house(cards):
+    if is_three_of_a_kind(cards) and is_pair(cards):
+        return True
+
+
+def is_flush(cards):
+    values = [card.split(",")[0] for card in cards.values()]
+    return len(set(values)) == 1
+
+
+def is_straight(cards):
     card_values = [card.split(",")[1] for card in cards.values()]
-    card_values = set(card_values)  # keine doppelten Werte
-    sorted_cards = sorted(card_values, key=lambda x: zahlen.index(x))
-    if len(card_values) < 5:
-        return False
+    sorted_cards = sorted(card_values, key=lambda x: value.index(x))
 
-    for i in range(len(sorted_cards) - 4):
-        start_index = zahlen.index(sorted_cards[i])
-        if sorted_cards[i:i + 5] == list(zahlen[start_index:start_index + 5]):
-            if 'Ass' in sorted_cards[i:i + 5] and flush(cards, False):
-                counter["royal_flush"] += 1
-            elif flush(cards,False):
-                counter["straight_flush"] += 1
-            else:
-                counter["straight"] += 1
+    start_index = value.index(sorted_cards[0])
+    if sorted_cards == list(value[start_index:start_index + len(sorted_cards)]):
+        return True
 
 
-def draw(deck, middel, own):
+def is_straight_flush(cards):
+    if is_flush(cards) and is_straight(cards):
+        return True
+
+
+def is_royal_flush(cards):
+    if is_straight_flush(cards) and 'Ass' in cards:
+        return True
+
+
+def draw(deck, card_num):
     shuffled_deck = list(deck.values())
     random.shuffle(shuffled_deck)
-    drawn_cards = {i: shuffled_deck[i] for i in range(middel + own)}
-    my_cards = {i: drawn_cards[i] for i in range(own)}
-    cards = {i: drawn_cards[i] for i in range(own)}
-    evaluation(drawn_cards, my_cards)
+    drawn_cards = {i: shuffled_deck[i] for i in range(card_num)}
+    evaluation(drawn_cards)
 
 
 def main():
-    farben = ("Herz", "Karo", "Pik", "Kreuz")
-    zahlen = ("2", "3", "4", "5", "6", "7", "8", "9", "10", "Bube", "Dame", "König", "Ass")
-    deck = {i: farbe + "," + zahl for i, (farbe, zahl) in enumerate((f, z) for f in farben for z in zahlen)}
-    for _ in range(1000):
-        draw(deck, 5, 2)
+    deck = {i: col + "," + val for i, (col, val) in enumerate((f, z) for f in colour for z in value)}
+    for _ in range(10000):
+        draw(deck, 5)
 
     print(counter)
 
