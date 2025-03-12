@@ -1,7 +1,22 @@
 import random
 from collections import Counter
+from functools import wraps
+import time
 
 
+def timing_decorator(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        start_time = time.time()
+        result = func(*args, **kwargs)
+        end_time = time.time()
+        print(f"{func.__name__} took {end_time - start_time:.6f} seconds to execute.")
+        return result
+
+    return wrapper
+
+
+@timing_decorator
 def evaluation(cards, counter):
     if is_royal_flush(cards):
         counter["royal_flush"] += 1
@@ -24,41 +39,48 @@ def evaluation(cards, counter):
     return counter
 
 
+@timing_decorator
 def is_pair(cards):
     values = [card.split(",")[1] for card in cards.values()]
     counts = Counter(values)
     return sum(1 for count in counts.values() if count == 2) == 1
 
 
+@timing_decorator
 def is_two_pairs(cards):
     values = [card.split(",")[1] for card in cards.values()]
     counts = Counter(values)
     return sum(1 for count in counts.values() if count == 2) == 2
 
 
+@timing_decorator
 def is_three_of_a_kind(cards):
     values = [card.split(",")[1] for card in cards.values()]
     counts = Counter(values)
     return 3 in counts.values()
 
 
+@timing_decorator
 def is_four_of_a_kind(cards):
     values = [card.split(",")[1] for card in cards.values()]
     counts = Counter(values)
     return 4 in counts.values()
 
 
+@timing_decorator
 def is_full_house(cards):
     values = [card.split(",")[1] for card in cards.values()]
     counts = Counter(values)
     return 3 in counts.values() and 2 in counts.values()
 
 
+@timing_decorator
 def is_flush(cards):
     suits = [card.split(",")[0] for card in cards.values()]
     return len(set(suits)) == 1
 
 
+@timing_decorator
 def is_straight(cards):
     card_values = sorted(int(card.split(",")[1]) for card in cards.values())
     # normal Straight
@@ -68,10 +90,12 @@ def is_straight(cards):
     return card_values == [2, 3, 4, 5, 14]
 
 
+@timing_decorator
 def is_straight_flush(cards):
     return is_flush(cards) and is_straight(cards)
 
 
+@timing_decorator
 def is_royal_flush(cards):
     card_values = [int(card.split(",")[1]) for card in cards.values()]
     if is_straight_flush(cards) and sorted(card_values) == [10, 11, 12, 13, 14]:
@@ -79,6 +103,7 @@ def is_royal_flush(cards):
     return False
 
 
+@timing_decorator
 def draw(deck, card_num, counter):
     drawn_cards = random.sample(list(deck.values()), card_num)
     drawn_cards = {i: drawn_cards[i] for i in range(len(drawn_cards))}
@@ -91,6 +116,7 @@ def how_many():
     return int(number)
 
 
+@timing_decorator
 def conclusion(counter, probabilities, draws):  #Formatierung mit ChatGPT für schönere Ausgabe
     for variant, count in counter.items():
         print(f"{'Hand':<20} {'Count':<10} {'Probability (%)':<20} {'Expected (%)':<20} {'Difference':<10}")
@@ -104,6 +130,7 @@ def conclusion(counter, probabilities, draws):  #Formatierung mit ChatGPT für s
         print("-" * 80)
 
 
+@timing_decorator
 def main():
     colours = ("Herz", "Karo", "Pik", "Kreuz")
     values = range(2, 15)
